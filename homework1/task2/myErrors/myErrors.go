@@ -14,7 +14,7 @@ func (e *myError) Error() string {
 	return fmt.Sprintf("Error text: %s | Error time: %v\n", e.text, e.time)
 }
 
-func New(text string) error {
+func New(text string) *myError {
 	return &myError{
 		text: text,
 		time: time.Now(),
