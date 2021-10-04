@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/alextonkonogov/gb-golang-level-2/homework2/task1/myErrors"
 	"log"
+
+	"github.com/alextonkonogov/gb-golang-level-2/homework2/tasks1and2/myErrors"
 )
 
 //Выполните сборку ваших предыдущих программ под операционную систему, отличающуюся от текущей.
