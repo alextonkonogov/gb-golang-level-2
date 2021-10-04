@@ -1,4 +1,4 @@
-module mod
+module github.com/alextonkonogov/gb-golang-level-2
 
 go 1.15
 
