@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	app "github.com/alextonkonogov/gb_tst_modules"
+	app2 "github.com/alextonkonogov/gb_tst_modules/v2"
+)
 
 //Для закрепления усвоенного материала повторите шаги раздела «Практическая часть» самостоятельно для своего проекта:
 //1. Создайте новый проект с использованием инструментария go mod.
@@ -9,6 +15,13 @@ import "fmt"
 //4. Сделайте изменения в проекте и запушьте их с мажорным обновлением версии пакета.
 //5. Очистите неиспользуемые библиотеки.
 func main() {
-	fmt.Println("Hello world")
-	// Пустой PR На случай, если не успею до 20:00 сегодня...
+	//использую v1
+	fmt.Println(app.Hi("Alex"))
+
+	//использую v2
+	str, err := app2.Hi("Alex", "fr")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(str)
 }
