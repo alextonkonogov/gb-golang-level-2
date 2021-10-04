@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,13 +20,16 @@ func main() {
 	for i := 0; i < 1000000; i++ {
 		err := myEmptyFileCreatingFunction(filepath.Join(dir, strconv.Itoa(i)))
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 }
 
 func myEmptyFileCreatingFunction(filename string) (err error) {
 	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("from myEmptyFileCreatingFunction: %w", err)
+	}
 	defer file.Close()
 	return
 }

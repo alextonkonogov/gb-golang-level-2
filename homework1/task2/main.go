@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/alextonkonogov/gb-golang-level-2/homework1/task2/myErrors"
 	"log"
-	"time"
 )
 
 //Дополните функцию из п.1 возвратом собственной ошибки в случае возникновения панической ситуации.
@@ -12,9 +11,6 @@ import (
 //Критерием успешного выполнения задания является наличие обработки созданной ошибки в функции main и вывод ее состояния в консоль
 func main() {
 	err := myFuncWithRecoveredPanic()
-	//ждем 3 секунды, чтобы увидеть, что время вывода ошибки в консоль и реальное время появления ошибки отличаются
-	fmt.Println("3 seconds waiting before error...")
-	time.Sleep(3 * time.Second)
 	if err != nil {
 		log.Println(err)
 	}

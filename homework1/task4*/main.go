@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
 
 //Выполните задание из блока “Для самостоятельного изучения” данной методички
@@ -17,5 +16,4 @@ func main() {
 
 		panic("A-A-A!!!")
 	}()
-	time.Sleep(time.Second)
 }
