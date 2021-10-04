@@ -16,9 +16,13 @@ import (
 //Критерием успешного выполнения программы является успешное создание миллиона пустых файлов в директории
 func main() {
 	dir := "oneMillionEmptyFilesFolder"
-	os.MkdirAll(dir, os.ModePerm)
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for i := 0; i < 1000000; i++ {
-		err := myEmptyFileCreatingFunction(filepath.Join(dir, strconv.Itoa(i)))
+		err = myEmptyFileCreatingFunction(filepath.Join(dir, strconv.Itoa(i)))
 		if err != nil {
 			log.Fatal(err)
 		}
