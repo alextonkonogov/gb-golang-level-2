@@ -12,7 +12,6 @@ func main() {
 		sync.Mutex
 		n int
 	}{}
-
 	workers := 1000
 
 	ch := make(chan int, workers)
