@@ -16,12 +16,15 @@ import (
 	f "github.com/alextonkonogov/gb-golang-level-2/homework8/files"
 )
 
-type Program struct{}
+type Program struct {
+	Config      *config.AppConfig
+	UniqueFiles *f.UniqueFiles
+	Duplicates  int
+}
 
-func (p Program) Start(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) error {
-	fmt.Printf("Program starts searching for duplicate files in \"%s\"...\n", cnfg.Path)
+func (p *Program) Start() error {
+	fmt.Printf("Program starts searching for duplicate files in \"%s\"...\n", p.Config.Path)
 
-	dublicates := 0
 	files := make(chan f.File)
 
 	go func(dir string, files chan<- f.File) {
@@ -35,12 +38,12 @@ func (p Program) Start(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) error
 			return nil
 		})
 		close(files)
-	}(cnfg.Path, files)
+	}(p.Config.Path, files)
 
 	var wg sync.WaitGroup
-	wg.Add(cnfg.Workers)
+	wg.Add(p.Config.Workers)
 
-	for i := 0; i < cnfg.Workers; i++ {
+	for i := 0; i < p.Config.Workers; i++ {
 		func(files <-chan f.File, uniqueFiles *f.UniqueFiles, wg *sync.WaitGroup) {
 			for file := range files {
 				data, err := ioutil.ReadFile(path.Join(".", file.Path))
@@ -50,38 +53,49 @@ func (p Program) Start(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) error
 				digest := sha512.Sum512(data)
 				uniqueFiles.Mtx.Lock()
 				if _, ok := uniqueFiles.Map[digest]; ok {
-					dublicates++
+					p.Duplicates++
 				}
 				uniqueFiles.Map[digest] = append(uniqueFiles.Map[digest], file)
 				uniqueFiles.Mtx.Unlock()
 			}
 			wg.Done()
-		}(files, uniqueFiles, &wg)
+		}(files, p.UniqueFiles, &wg)
 	}
-
 	wg.Wait()
-	uniqueFiles.Sort()
-	fmt.Printf("Found %d unique files and %d dublicates:\n", len(uniqueFiles.Map), dublicates)
 
-	for k, _ := range uniqueFiles.Map {
-		for i, _ := range uniqueFiles.Map[k] {
+	p.UniqueFiles.Sort()
+	p.printResult()
+
+	if p.Config.DeleteDublicates {
+		err := p.askForConfirmBeforeDeletion()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Program) printResult() {
+	fmt.Printf("Found %d unique files and %d dublicates:\n", len(p.UniqueFiles.Map), p.Duplicates)
+
+	for k, _ := range p.UniqueFiles.Map {
+		for i, _ := range p.UniqueFiles.Map[k] {
 			if i == 0 {
-				fmt.Println(uniqueFiles.Map[k][i].Name)
-				if len(uniqueFiles.Map[k]) > 1 {
-					fmt.Printf("    %d dublicates:\n", len(uniqueFiles.Map[k])-1)
+				fmt.Println(p.UniqueFiles.Map[k][i].Name)
+				if len(p.UniqueFiles.Map[k]) > 1 {
+					fmt.Printf("    %d dublicates:\n", len(p.UniqueFiles.Map[k])-1)
 				}
 			} else {
-				fmt.Printf("    %s\n", uniqueFiles.Map[k][i].Name)
+				fmt.Printf("    %s\n", p.UniqueFiles.Map[k][i].Name)
 			}
 		}
 	}
+}
 
-	if !cnfg.DeleteDublicates {
-		os.Exit(1)
-	}
-
+func (p *Program) askForConfirmBeforeDeletion() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Are you sure to delete all duplicate files? yes/no: ")
+
 	for scanner.Scan() {
 		if scanner.Err() != nil {
 			return scanner.Err()
@@ -95,13 +109,16 @@ func (p Program) Start(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) error
 			break
 		}
 
-		err := uniqueFiles.DeleteDuplicates()
+		err := p.UniqueFiles.DeleteDuplicates()
 		if err != nil {
 			return err
 		}
 		fmt.Print("All duplicate files were deleted\n")
 		break
 	}
-
 	return nil
+}
+
+func NewProgram(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) *Program {
+	return &Program{cnfg, uniqueFiles, 0}
 }

@@ -15,8 +15,8 @@ func main() {
 	}
 	uniqueFiles := f.NewUniqueFilesMap()
 
-	program := new(p.Program)
-	err = program.Start(cnfg, uniqueFiles)
+	program := p.NewProgram(cnfg, uniqueFiles)
+	err = program.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
