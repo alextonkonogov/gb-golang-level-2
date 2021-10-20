@@ -66,7 +66,7 @@ func (p *Program) Start() error {
 	p.UniqueFiles.Sort()
 	p.printResult()
 
-	if p.Config.DeleteDublicates {
+	if p.Config.DeleteDublicates && p.Duplicates > 0 {
 		err := p.askForConfirmBeforeDeletion()
 		if err != nil {
 			return err
