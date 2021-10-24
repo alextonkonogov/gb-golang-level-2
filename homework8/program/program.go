@@ -1,3 +1,4 @@
+//Package provides the main program/app work logic hidden behind a "facade"
 package program
 
 import (
@@ -16,15 +17,17 @@ import (
 	f "github.com/alextonkonogov/gb-golang-level-2/homework8/files"
 )
 
+// Struct Program consists of Config, UniqueFiles and amount of found file duplicates
 type Program struct {
 	Config      *config.AppConfig
 	UniqueFiles *f.UniqueFiles
 	Duplicates  int
 }
 
+// Method Start() is used to start the program finding all the files and their duplicates in a given directory.
+// The program prints in console the list of found files and their duplicates.
+// It additionally asks the user to confirm deletion if the parameter "DeleteDublicates" is in true.
 func (p *Program) Start() error {
-	fmt.Printf("Program starts searching for duplicate files in \"%s\"...\n", p.Config.Path)
-
 	files := make(chan f.File)
 
 	go func(dir string, files chan<- f.File) {
@@ -66,24 +69,27 @@ func (p *Program) Start() error {
 	p.UniqueFiles.Sort()
 	p.printResult()
 
-	if p.Config.DeleteDublicates && p.Duplicates > 0 {
-		err := p.askForConfirmBeforeDeletion()
-		if err != nil {
-			return err
-		}
+	err := p.askForConfirmBeforeDeletion()
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
+// Method printResult() is used inside Start() and prints in console the list of found files and their duplicates
 func (p *Program) printResult() {
-	fmt.Printf("Found %d unique files and %d dublicates:\n", len(p.UniqueFiles.Map), p.Duplicates)
+	if !p.Config.PrintResult {
+		return
+	}
+	fmt.Printf("Found %d unique files and %d duplicates in \"%s\":\n", len(p.UniqueFiles.Map), p.Duplicates, p.Config.Path)
 
 	for k, _ := range p.UniqueFiles.Map {
 		for i, _ := range p.UniqueFiles.Map[k] {
 			if i == 0 {
 				fmt.Println(p.UniqueFiles.Map[k][i].Name)
 				if len(p.UniqueFiles.Map[k]) > 1 {
-					fmt.Printf("    %d dublicates:\n", len(p.UniqueFiles.Map[k])-1)
+					fmt.Printf("    %d duplicates:\n", len(p.UniqueFiles.Map[k])-1)
 				}
 			} else {
 				fmt.Printf("    %s\n", p.UniqueFiles.Map[k][i].Name)
@@ -92,33 +98,38 @@ func (p *Program) printResult() {
 	}
 }
 
+// Method askForConfirmBeforeDeletion() is used inside Start() and contains logic of deleting duplicates files if such were found and user wanted to delete them
 func (p *Program) askForConfirmBeforeDeletion() error {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("Are you sure to delete all duplicate files? yes/no: ")
+	if p.Config.DeleteDublicates && p.Duplicates > 0 {
+		scanner := bufio.NewScanner(os.Stdin)
+		fmt.Print("Are you sure to delete all duplicate files? yes/no: ")
 
-	for scanner.Scan() {
-		if scanner.Err() != nil {
-			return scanner.Err()
-		}
-		in := strings.TrimSpace(scanner.Text())
-		if in != "yes" && in != "no" {
-			fmt.Printf("%s", "    try again: type yes or no ")
-			continue
-		}
-		if in != "yes" {
+		for scanner.Scan() {
+			if scanner.Err() != nil {
+				return scanner.Err()
+			}
+			in := strings.TrimSpace(scanner.Text())
+			if in != "yes" && in != "no" {
+				fmt.Printf("%s", "    try again: type yes or no ")
+				continue
+			}
+			if in != "yes" {
+				break
+			}
+
+			err := p.UniqueFiles.DeleteDuplicates()
+			if err != nil {
+				return err
+			}
+			fmt.Print("All duplicate files were deleted\n")
 			break
 		}
-
-		err := p.UniqueFiles.DeleteDuplicates()
-		if err != nil {
-			return err
-		}
-		fmt.Print("All duplicate files were deleted\n")
-		break
 	}
+
 	return nil
 }
 
+// Use method NewProgram() to get a new program to start
 func NewProgram(cnfg *config.AppConfig, uniqueFiles *f.UniqueFiles) *Program {
 	return &Program{cnfg, uniqueFiles, 0}
 }
